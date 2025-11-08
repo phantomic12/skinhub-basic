@@ -13,6 +13,7 @@ if [[ -z "$OWNER" || -z "$REPO" || -z "$BRANCH" ]]; then
 fi
 
 if [ -d "$SKINS_DIR" ]; then
+  # Collect only direct children with .osk or .zip (case-insensitive)
   mapfile -t FILES < <(
     find "$SKINS_DIR" -maxdepth 1 -mindepth 1 -type f \
       \( -iname "*.osk" -o -iname "*.zip" \) -printf "%f\n"
@@ -21,6 +22,7 @@ else
   FILES=()
 fi
 
+# If no files, still regenerate skins.md to keep things deterministic
 urlencode() {
   python - "$1" << 'PY'
 import sys, urllib.parse
@@ -57,6 +59,7 @@ print(result)
 PY
 }
 
+# Sort files case-insensitively with case-sensitive tiebreaker
 readarray -t SORTED_FILES < <(
   printf '%s\n' "${FILES[@]}" \
   | python - << 'PY'
@@ -82,6 +85,8 @@ PY
     [ -n "$f" ] || continue
     skin_name="$(to_skin_name "$f")"
     encoded="$(urlencode "$f")"
+    # Always use the current repo (OWNER/REPO) and current ref (BRANCH) from the workflow context,
+    # so forks generate correct, fork-local links.
     download_url="https://github.com/${OWNER}/${REPO}/raw/${BRANCH}/skins/${encoded}"
     echo "| ${skin_name} | ${f} | [Download](${download_url}) |"
   done
