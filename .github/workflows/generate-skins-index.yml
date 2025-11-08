@@ -73,9 +73,10 @@ jobs:
 
           # Collect eligible skin files: only direct children of skins/ with .osk or .zip (case-insensitive)
           if [ -d "$SKINS_DIR" ]; then
-            mapfile -t FILES < <(find "$SKINS_DIR" -maxdepth 1 -mindepth 1 -type f \
-              \( -iname "*.osk" -o -iname "*.zip" \) -printf "%f\n" | \
-              python - << 'PY'
+            mapfile -t FILES < <(
+              find "$SKINS_DIR" -maxdepth 1 -mindepth 1 -type f \
+                \( -iname "*.osk" -o -iname "*.zip" \) -printf "%f\n" \
+              | python - << 'PY'
 import sys
 files = [line.strip() for line in sys.stdin if line.strip()]
 # Sort case-insensitive with case-sensitive tiebreaker
